@@ -146,7 +146,9 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({
       </div>
 
       {/* HTML5 Canvas Viewport */}
-      <div className="relative flex items-center justify-center w-full h-full overflow-auto canvas-checkerboard rounded-xl border border-slate-800 shadow-2xl p-4">
+      <div className={`relative flex items-center justify-center w-full h-full overflow-auto rounded-xl border border-slate-800 shadow-2xl p-4 ${
+        mode === 'sketch' ? 'canvas-paper-grid' : mode === 'pixel' ? 'canvas-checkerboard-pixel' : 'canvas-studio-imprimatura'
+      }`}>
         <div
           style={{
             transform: `scale(${zoom})`,

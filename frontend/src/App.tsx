@@ -88,28 +88,95 @@ export function App() {
   };
 
   const generateFallbackSteps = (targetMode: ArtMode, targetPrompt: string) => {
+    const promptLower = (targetPrompt || '').toLowerCase();
+    const isVehicle = ['car', 'vehicle', 'robot', 'helmet', 'ship', 'cyber', 'bike'].some(k => promptLower.includes(k));
+    const isCreature = ['cat', 'dog', 'dragon', 'animal', 'lion', 'bird', 'creature'].some(k => promptLower.includes(k));
+    const isLandscape = ['tree', 'mountain', 'landscape', 'castle', 'building', 'city', 'house'].some(k => promptLower.includes(k));
+    const isHuman = ['human', 'face', 'portrait', 'person', 'figure', 'body', 'anatomy'].some(k => promptLower.includes(k));
+
     const createSvgDataUrl = (stage: number, title: string) => {
+      // Choose SVG background based on target mode
+      const bgFill = targetMode === 'sketch' ? '#faf8f5' : targetMode === 'pixel' ? 'none' : '#1c1917';
+      const gridStroke = targetMode === 'sketch' ? '#e2e8f0' : targetMode === 'pixel' ? '#334155' : '#292524';
+      const strokePrimary = targetMode === 'sketch' ? '#1e293b' : '#38bdf8';
+      const strokeAccent = targetMode === 'sketch' ? '#0284c7' : '#c084fc';
+
+      let stageContent = '';
+
+      if (filePreview) {
+        // Decomposition of User's Uploaded Reference Image
+        stageContent = `
+          <image href="${filePreview}" x="32" y="32" width="448" height="448" preserveAspectRatio="xMidYMid slice" opacity="${0.2 + stage * 0.16}" filter="${stage === 1 ? 'contrast(1.5) grayscale(1)' : stage === 2 ? 'contrast(1.3)' : 'none'}"/>
+          ${stage === 1 ? '<rect x="32" y="32" width="448" height="448" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="8,8"/><line x1="32" y1="256" x2="480" y2="256" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4"/><line x1="256" y1="32" x2="256" y2="480" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4"/>' : ''}
+          ${stage >= 2 ? '<rect x="40" y="40" width="432" height="432" fill="none" stroke="' + strokePrimary + '" stroke-width="3" rx="8"/>' : ''}
+          ${stage >= 3 ? '<line x1="40" y1="180" x2="472" y2="180" stroke="' + strokePrimary + '" stroke-width="2" stroke-dasharray="6,3"/><line x1="40" y1="320" x2="472" y2="320" stroke="' + strokePrimary + '" stroke-width="2" stroke-dasharray="6,3"/>' : ''}
+          ${stage >= 4 ? '<path d="M 60 80 L 120 140 M 80 80 L 140 140 M 100 80 L 160 140" stroke="' + strokeAccent + '" stroke-width="2"/>' : ''}
+          ${stage >= 5 ? '<rect x="32" y="32" width="448" height="448" fill="none" stroke="' + strokeAccent + '" stroke-width="4"/>' : ''}
+        `;
+      } else if (targetMode === 'pixel') {
+        // Crisp Pixel Art Vectors
+        stageContent = `
+          ${stage >= 1 ? '<rect x="96" y="96" width="320" height="320" fill="none" stroke="#475569" stroke-width="4" stroke-dasharray="8,8"/>' : ''}
+          ${stage >= 2 ? (isVehicle ? '<rect x="128" y="200" width="256" height="128" fill="#0284c7" rx="4"/>' : '<rect x="160" y="140" width="192" height="240" fill="#38bdf8" rx="4"/>') : ''}
+          ${stage >= 3 ? (isVehicle ? '<rect x="176" y="160" width="160" height="64" fill="#38bdf8"/><circle cx="176" cy="328" r="32" fill="#0f172a"/><circle cx="336" cy="328" r="32" fill="#0f172a"/>' : '<rect x="192" y="180" width="48" height="48" fill="#f8fafc"/><rect x="272" y="180" width="48" height="48" fill="#f8fafc"/>') : ''}
+          ${stage >= 4 ? '<path d="M 140 210 H 370 M 140 230 H 370" stroke="#bae6fd" stroke-width="3" stroke-dasharray="6,6"/>' : ''}
+          ${stage >= 5 ? '<rect x="128" y="200" width="256" height="128" fill="none" stroke="#f0abfc" stroke-width="6"/>' : ''}
+        `;
+      } else if (isVehicle) {
+        // Vehicle / Sci-Fi / Helmet Vector Scaffolding
+        stageContent = `
+          ${stage >= 1 ? '<polygon points="80,320 160,160 352,160 432,320" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="6,6"/><ellipse cx="256" cy="340" rx="180" ry="40" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4"/>' : ''}
+          ${stage >= 2 ? '<path d="M 90 310 Q 160 150 256 150 Q 352 150 422 310 Z" fill="none" stroke="' + strokePrimary + '" stroke-width="3.5"/>' : ''}
+          ${stage >= 3 ? '<path d="M 140 220 Q 256 190 372 220" fill="none" stroke="#60a5fa" stroke-width="2.5"/><ellipse cx="160" cy="320" rx="30" ry="30" fill="none" stroke="#60a5fa" stroke-width="2.5"/><ellipse cx="352" cy="320" rx="30" ry="30" fill="none" stroke="#60a5fa" stroke-width="2.5"/>' : ''}
+          ${stage >= 4 ? '<path d="M 160 230 L 220 280 M 180 230 L 240 280 M 200 230 L 260 280" stroke="#818cf8" stroke-width="2"/>' : ''}
+          ${stage >= 5 ? '<circle cx="410" cy="290" r="12" fill="#f8fafc"/><path d="M 90 310 Q 256 130 422 310" fill="none" stroke="' + strokeAccent + '" stroke-width="4"/>' : ''}
+        `;
+      } else if (isCreature) {
+        // Creature / Animal Vector Scaffolding
+        stageContent = `
+          ${stage >= 1 ? '<circle cx="180" cy="200" r="70" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="6,6"/><circle cx="340" cy="260" r="90" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="6,6"/><line x1="180" y1="200" x2="340" y2="260" stroke="#06b6d4" stroke-width="2" stroke-dasharray="4,4"/>' : ''}
+          ${stage >= 2 ? '<path d="M 130 170 Q 220 120 340 170 Q 430 240 400 340 Q 280 370 160 310 Q 110 240 130 170 Z" fill="none" stroke="' + strokePrimary + '" stroke-width="3.5"/>' : ''}
+          ${stage >= 3 ? '<polygon points="140,140 170,90 190,140" fill="none" stroke="#60a5fa" stroke-width="2.5"/><polygon points="200,140 230,90 250,140" fill="none" stroke="#60a5fa" stroke-width="2.5"/>' : ''}
+          ${stage >= 4 ? '<path d="M 220 280 Q 280 320 340 280" fill="none" stroke="#818cf8" stroke-width="2.5"/>' : ''}
+          ${stage >= 5 ? '<circle cx="170" cy="180" r="6" fill="#1e293b"/><circle cx="220" cy="180" r="6" fill="#1e293b"/><path d="M 130 170 Q 256 100 400 340" fill="none" stroke="' + strokeAccent + '" stroke-width="4"/>' : ''}
+        `;
+      } else if (isLandscape) {
+        // Landscape / Architecture Scaffolding
+        stageContent = `
+          ${stage >= 1 ? '<line x1="0" y1="300" x2="512" y2="300" stroke="#06b6d4" stroke-width="2" stroke-dasharray="6,6"/><polygon points="60,300 180,120 300,300" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="6,6"/><polygon points="220,300 360,160 480,300" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="6,6"/>' : ''}
+          ${stage >= 2 ? '<path d="M 40 300 L 180 120 L 300 300 L 460 300 Z" fill="none" stroke="' + strokePrimary + '" stroke-width="3.5"/>' : ''}
+          ${stage >= 3 ? '<circle cx="380" cy="110" r="40" fill="none" stroke="#60a5fa" stroke-width="2.5"/><path d="M 80 340 Q 256 380 432 340" fill="none" stroke="#60a5fa" stroke-width="2.5"/>' : ''}
+          ${stage >= 4 ? '<path d="M 180 120 L 220 220 M 200 140 L 240 240 M 220 160 L 260 260" stroke="#818cf8" stroke-width="2"/>' : ''}
+          ${stage >= 5 ? '<path d="M 40 300 L 180 120 L 300 300 L 460 300 Z" fill="none" stroke="' + strokeAccent + '" stroke-width="4"/>' : ''}
+        `;
+      } else {
+        // Dynamic Human / Generic Anatomy Scaffolding
+        stageContent = `
+          ${stage >= 1 ? '<ellipse cx="256" cy="180" rx="80" ry="100" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="6,6"/><line x1="256" y1="50" x2="256" y2="450" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4"/><line x1="100" y1="180" x2="412" y2="180" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4"/>' : ''}
+          ${stage >= 2 ? '<path d="M 256 80 C 200 80, 160 130, 160 200 C 160 270, 190 340, 256 400 C 322 340, 352 270, 352 200 C 352 130, 312 80, 256 80 Z" fill="none" stroke="' + strokePrimary + '" stroke-width="3.5"/>' : ''}
+          ${stage >= 3 ? '<path d="M 200 180 Q 256 150 312 180" fill="none" stroke="#60a5fa" stroke-width="2.5"/><path d="M 210 230 Q 256 270 302 230" fill="none" stroke="#60a5fa" stroke-width="2.5"/><path d="M 230 310 Q 256 335 282 310" fill="none" stroke="#60a5fa" stroke-width="2.5"/>' : ''}
+          ${stage >= 4 ? '<path d="M 180 210 L 220 250 M 190 230 L 230 270 M 200 250 L 240 290" stroke="#818cf8" stroke-width="2"/>' : ''}
+          ${stage >= 5 ? '<circle cx="225" cy="185" r="6" fill="' + strokePrimary + '"/><circle cx="287" cy="185" r="6" fill="' + strokePrimary + '"/><path d="M 256 75 C 190 75, 155 125, 155 200 C 155 275, 185 345, 256 405" fill="none" stroke="' + strokeAccent + '" stroke-width="4.5"/>' : ''}
+        `;
+      }
+
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#0f172a" rx="16"/>
-  <path d="M 64 0 V 512 M 128 0 V 512 M 192 0 V 512 M 256 0 V 512 M 320 0 V 512 M 384 0 V 512 M 448 0 V 512" stroke="#1e293b" stroke-width="1"/>
-  <path d="M 0 64 H 512 M 0 128 H 512 M 0 192 H 512 M 0 256 H 512 M 0 320 H 512 M 0 384 H 512 M 0 448 H 512" stroke="#1e293b" stroke-width="1"/>
-  ${stage >= 1 ? '<ellipse cx="256" cy="200" rx="90" ry="110" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="6,6"/><path d="M 166 200 C 166 340, 346 340, 346 200" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="6,6"/><line x1="256" y1="60" x2="256" y2="440" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4"/><line x1="100" y1="200" x2="412" y2="200" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4"/>' : ''}
-  ${stage >= 2 ? '<path d="M 256 90 C 200 90, 160 140, 160 210 C 160 280, 190 350, 256 410 C 322 350, 352 280, 352 210 C 352 140, 312 90, 256 90 Z" fill="none" stroke="#38bdf8" stroke-width="3.5"/>' : ''}
-  ${stage >= 3 ? '<path d="M 200 190 Q 256 160 312 190" fill="none" stroke="#60a5fa" stroke-width="2.5"/><path d="M 210 240 Q 256 280 302 240" fill="none" stroke="#60a5fa" stroke-width="2.5"/><path d="M 230 320 Q 256 345 282 320" fill="none" stroke="#60a5fa" stroke-width="2.5"/>' : ''}
-  ${stage >= 4 ? '<path d="M 180 220 L 220 260 M 190 240 L 230 280 M 200 260 L 240 300 M 210 280 L 250 320" stroke="#818cf8" stroke-width="2"/><path d="M 292 220 L 332 260 M 282 240 L 322 280 M 272 260 L 312 300 M 262 280 L 302 320" stroke="#818cf8" stroke-width="2"/>' : ''}
-  ${stage >= 5 ? '<circle cx="225" cy="195" r="6" fill="#f8fafc"/><circle cx="287" cy="195" r="6" fill="#f8fafc"/><path d="M 256 85 C 190 85, 155 135, 155 210 C 155 285, 185 355, 256 415" fill="none" stroke="#c084fc" stroke-width="4.5"/>' : ''}
-  <rect x="20" y="456" width="180" height="36" rx="8" fill="#1e293b" stroke="#334155"/>
-  <text x="35" y="479" fill="#38bdf8" font-family="sans-serif" font-size="14" font-weight="bold">Stage ${stage}: ${title}</text>
+  ${bgFill !== 'none' ? `<rect width="512" height="512" fill="${bgFill}" rx="16"/>` : ''}
+  <path d="M 64 0 V 512 M 128 0 V 512 M 192 0 V 512 M 256 0 V 512 M 320 0 V 512 M 384 0 V 512 M 448 0 V 512" stroke="${gridStroke}" stroke-width="0.75" opacity="0.6"/>
+  <path d="M 0 64 H 512 M 0 128 H 512 M 0 192 H 512 M 0 256 H 512 M 0 320 H 512 M 0 384 H 512 M 0 448 H 512" stroke="${gridStroke}" stroke-width="0.75" opacity="0.6"/>
+  ${stageContent}
+  <rect x="20" y="456" width="220" height="36" rx="8" fill="#0f172a" stroke="#334155" opacity="0.9"/>
+  <text x="32" y="479" fill="#38bdf8" font-family="sans-serif" font-size="13" font-weight="bold">Stage ${stage}: ${title}</text>
 </svg>`;
       return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
     };
 
     const defaultDescriptions = [
-      { name: 'Stage 1: Gesture & Scaffolding', technique: 'Scaffolding', desc: 'Loose bounding boxes and perspective lines.' },
-      { name: 'Stage 2: Primary Contour', technique: 'Block-in', desc: 'Outer silhouette superimposed over scaffolding.' },
-      { name: 'Stage 3: Plane Breaks & Features', technique: 'Seams', desc: 'Secondary features and terminator lines.' },
-      { name: 'Stage 4: Value & Hatching', technique: 'Cross-hatch', desc: 'Planar shading and directional hatching.' },
-      { name: 'Stage 5: Line Weight Accents', technique: 'Fine Details', desc: 'Final dark accents and textures.' }
+      { name: 'Stage 1: Gesture & Scaffolding', technique: 'Scaffolding', desc: `Loose bounding boxes and grid lines for "${targetPrompt}".` },
+      { name: 'Stage 2: Primary Contour', technique: 'Block-in', desc: 'Outer silhouette and primary volume block-in.' },
+      { name: 'Stage 3: Plane Breaks & Seams', technique: 'Seams', desc: 'Secondary features and light/shadow plane break lines.' },
+      { name: 'Stage 4: Value & Hatching', technique: 'Cross-hatch', desc: 'Planar shading and directional cross-hatching.' },
+      { name: 'Stage 5: Line Weight Accents', technique: 'Fine Details', desc: 'Final line weight accents, specular highlights, and textures.' }
     ];
 
     const fallbackSteps: StepLayer[] = defaultDescriptions.map((d, i) => ({

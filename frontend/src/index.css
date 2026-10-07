@@ -60,3 +60,30 @@ body {
   background-size: 20px 20px;
   background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
+
+/* Sketch mode fine paper background */
+.canvas-paper-grid {
+  background-color: #faf8f5;
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Pixel mode high-contrast checkerboard */
+.canvas-checkerboard-pixel {
+  background-color: #f1f5f9;
+  background-image: linear-gradient(45deg, #cbd5e1 25%, transparent 25%),
+                    linear-gradient(-45deg, #cbd5e1 25%, transparent 25%),
+                    linear-gradient(45deg, transparent 75%, #cbd5e1 75%),
+                    linear-gradient(-45deg, transparent 75%, #cbd5e1 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+}
+
+/* Paint mode studio imprimatura canvas wash */
+.canvas-studio-imprimatura {
+  background-color: #1c1917;
+  background-image: radial-gradient(#292524 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
