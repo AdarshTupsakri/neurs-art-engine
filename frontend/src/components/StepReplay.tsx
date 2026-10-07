@@ -29,11 +29,11 @@ export const StepReplay: React.FC<StepReplayProps> = ({
     let timer: any;
     if (isPlaying) {
       timer = setInterval(() => {
-        onSelectStep((prev) => (prev + 1) % (steps.length || 5));
+        onSelectStep((currentStepIndex + 1) % (steps.length || 5));
       }, 2000);
     }
     return () => clearInterval(timer);
-  }, [isPlaying, steps.length, onSelectStep]);
+  }, [isPlaying, steps.length, currentStepIndex, onSelectStep]);
 
   return (
     <div className="w-full flex flex-col gap-4 p-5 rounded-2xl glass-panel border border-slate-800">

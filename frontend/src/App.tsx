@@ -46,7 +46,7 @@ export function App() {
 
   const fetchTutorialSteps = async (
     targetMode: ArtMode,
-    targetPrompt: str,
+    targetPrompt: string,
     file: File | null
   ) => {
     setLoading(true);
@@ -87,7 +87,7 @@ export function App() {
     }
   };
 
-  const generateFallbackSteps = (targetMode: ArtMode, targetPrompt: str) => {
+  const generateFallbackSteps = (targetMode: ArtMode, targetPrompt: string) => {
     const defaultDescriptions = [
       { name: 'Stage 1: Gesture & Scaffolding', technique: 'Scaffolding', desc: 'Loose bounding boxes and perspective lines.' },
       { name: 'Stage 2: Primary Contour', technique: 'Block-in', desc: 'Outer silhouette superimposed over scaffolding.' },
