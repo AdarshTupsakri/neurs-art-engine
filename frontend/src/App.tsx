@@ -88,6 +88,22 @@ export function App() {
   };
 
   const generateFallbackSteps = (targetMode: ArtMode, targetPrompt: string) => {
+    const createSvgDataUrl = (stage: number, title: string) => {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0f172a" rx="16"/>
+  <path d="M 64 0 V 512 M 128 0 V 512 M 192 0 V 512 M 256 0 V 512 M 320 0 V 512 M 384 0 V 512 M 448 0 V 512" stroke="#1e293b" stroke-width="1"/>
+  <path d="M 0 64 H 512 M 0 128 H 512 M 0 192 H 512 M 0 256 H 512 M 0 320 H 512 M 0 384 H 512 M 0 448 H 512" stroke="#1e293b" stroke-width="1"/>
+  ${stage >= 1 ? '<ellipse cx="256" cy="200" rx="90" ry="110" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="6,6"/><path d="M 166 200 C 166 340, 346 340, 346 200" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="6,6"/><line x1="256" y1="60" x2="256" y2="440" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4"/><line x1="100" y1="200" x2="412" y2="200" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4"/>' : ''}
+  ${stage >= 2 ? '<path d="M 256 90 C 200 90, 160 140, 160 210 C 160 280, 190 350, 256 410 C 322 350, 352 280, 352 210 C 352 140, 312 90, 256 90 Z" fill="none" stroke="#38bdf8" stroke-width="3.5"/>' : ''}
+  ${stage >= 3 ? '<path d="M 200 190 Q 256 160 312 190" fill="none" stroke="#60a5fa" stroke-width="2.5"/><path d="M 210 240 Q 256 280 302 240" fill="none" stroke="#60a5fa" stroke-width="2.5"/><path d="M 230 320 Q 256 345 282 320" fill="none" stroke="#60a5fa" stroke-width="2.5"/>' : ''}
+  ${stage >= 4 ? '<path d="M 180 220 L 220 260 M 190 240 L 230 280 M 200 260 L 240 300 M 210 280 L 250 320" stroke="#818cf8" stroke-width="2"/><path d="M 292 220 L 332 260 M 282 240 L 322 280 M 272 260 L 312 300 M 262 280 L 302 320" stroke="#818cf8" stroke-width="2"/>' : ''}
+  ${stage >= 5 ? '<circle cx="225" cy="195" r="6" fill="#f8fafc"/><circle cx="287" cy="195" r="6" fill="#f8fafc"/><path d="M 256 85 C 190 85, 155 135, 155 210 C 155 285, 185 355, 256 415" fill="none" stroke="#c084fc" stroke-width="4.5"/>' : ''}
+  <rect x="20" y="456" width="180" height="36" rx="8" fill="#1e293b" stroke="#334155"/>
+  <text x="35" y="479" fill="#38bdf8" font-family="sans-serif" font-size="14" font-weight="bold">Stage ${stage}: ${title}</text>
+</svg>`;
+      return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+    };
+
     const defaultDescriptions = [
       { name: 'Stage 1: Gesture & Scaffolding', technique: 'Scaffolding', desc: 'Loose bounding boxes and perspective lines.' },
       { name: 'Stage 2: Primary Contour', technique: 'Block-in', desc: 'Outer silhouette superimposed over scaffolding.' },
@@ -101,7 +117,7 @@ export function App() {
       name: d.name,
       technique: d.technique,
       description: d.desc,
-      image_url: '',
+      image_url: createSvgDataUrl(i + 1, d.technique),
       width: 512,
       height: 512,
       opacity: 1.0,
