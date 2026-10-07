@@ -1,17 +1,9 @@
-import io
-from PIL import Image, ImageDraw
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from PIL import Image, ImageDraw
 from app.services.slice_processor import SliceProcessor
+from app.services.stages import PIXEL_STAGES
 
 router = APIRouter()
-
-PIXEL_STAGE_DESCRIPTIONS = [
-    {"stage": 1, "name": "Pixel Outline & Silhouette", "description": "Crisp 1-pixel boundary outline establishing sprite proportions."},
-    {"stage": 2, "name": "Flat Color Palette Fill", "description": "Flat color fill mapped using restricted 16-color palette."},
-    {"stage": 3, "name": "Primary Dithering & Shadow Shading", "description": "Dither patterns and directional shadow shading."},
-    {"stage": 4, "name": "Highlight Pixels & Specular Pops", "description": "Specular highlight pixels and contrast pop accents."},
-    {"stage": 5, "name": "Final Sprite Polish & Outline Cleanup", "description": "Clean anti-aliasing and outline color banding cleanup."}
-]
 
 @router.post("/generate/pixel", tags=["Pixel Art"])
 async def generate_pixel(
@@ -46,13 +38,17 @@ async def generate_pixel(
                 # Step 5: Final polish
                 draw.point((17, 17), fill=(255, 220, 100, 255))
 
-            # Rescale to 512x512 with NEAREST filtering for crisp pixel art!
             crisp_img = img.resize((512, 512), Image.NEAREST)
-            meta = PIXEL_STAGE_DESCRIPTIONS[s].copy()
-            meta["image_url"] = SliceProcessor.image_to_base64_url(crisp_img)
-            meta["width"] = 512
-            meta["height"] = 512
-            steps.append(meta)
+            spec = PIXEL_STAGES[s]
+            steps.append({
+                "stage": spec.stage,
+                "name": spec.name,
+                "technique": spec.technique,
+                "description": spec.description,
+                "image_url": SliceProcessor.image_to_data_url(crisp_img),
+                "width": 512,
+                "height": 512
+            })
 
         return {
             "status": "success",
