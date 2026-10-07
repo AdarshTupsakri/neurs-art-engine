@@ -104,14 +104,53 @@ export function App() {
       let stageContent = '';
 
       if (filePreview) {
-        // Decomposition of User's Uploaded Reference Image
+        // Progressive Beginner Decomposition of Uploaded Reference Image
         stageContent = `
-          <image href="${filePreview}" x="32" y="32" width="448" height="448" preserveAspectRatio="xMidYMid slice" opacity="${0.2 + stage * 0.16}" filter="${stage === 1 ? 'contrast(1.5) grayscale(1)' : stage === 2 ? 'contrast(1.3)' : 'none'}"/>
-          ${stage === 1 ? '<rect x="32" y="32" width="448" height="448" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="8,8"/><line x1="32" y1="256" x2="480" y2="256" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4"/><line x1="256" y1="32" x2="256" y2="480" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4"/>' : ''}
-          ${stage >= 2 ? '<rect x="40" y="40" width="432" height="432" fill="none" stroke="' + strokePrimary + '" stroke-width="3" rx="8"/>' : ''}
-          ${stage >= 3 ? '<line x1="40" y1="180" x2="472" y2="180" stroke="' + strokePrimary + '" stroke-width="2" stroke-dasharray="6,3"/><line x1="40" y1="320" x2="472" y2="320" stroke="' + strokePrimary + '" stroke-width="2" stroke-dasharray="6,3"/>' : ''}
-          ${stage >= 4 ? '<path d="M 60 80 L 120 140 M 80 80 L 140 140 M 100 80 L 160 140" stroke="' + strokeAccent + '" stroke-width="2"/>' : ''}
-          ${stage >= 5 ? '<rect x="32" y="32" width="448" height="448" fill="none" stroke="' + strokeAccent + '" stroke-width="4"/>' : ''}
+          <!-- Base Reference Image with Progressive Opacity and Contrast -->
+          <image href="${filePreview}" x="32" y="32" width="448" height="448" preserveAspectRatio="xMidYMid slice" 
+                 opacity="${stage === 1 ? 0.15 : stage === 2 ? 0.35 : stage === 3 ? 0.60 : stage === 4 ? 0.80 : 0.95}" 
+                 filter="${stage === 1 ? 'grayscale(1) contrast(2.0)' : stage === 2 ? 'grayscale(1) contrast(1.5)' : 'none'}"/>
+
+          <!-- STAGE 1: Proportional Scaffolding (Grid & Axis Guidelines) -->
+          ${stage >= 1 ? `
+            <rect x="32" y="32" width="448" height="448" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="6,6"/>
+            <line x1="32" y1="256" x2="480" y2="256" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4"/>
+            <line x1="256" y1="32" x2="256" y2="480" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,4"/>
+            <line x1="181" y1="32" x2="181" y2="480" stroke="#06b6d4" stroke-width="1" stroke-dasharray="2,4" opacity="0.6"/>
+            <line x1="331" y1="32" x2="331" y2="480" stroke="#06b6d4" stroke-width="1" stroke-dasharray="2,4" opacity="0.6"/>
+            <line x1="32" y1="181" x2="480" y2="181" stroke="#06b6d4" stroke-width="1" stroke-dasharray="2,4" opacity="0.6"/>
+            <line x1="32" y1="331" x2="480" y2="331" stroke="#06b6d4" stroke-width="1" stroke-dasharray="2,4" opacity="0.6"/>
+            <ellipse cx="256" cy="256" rx="160" ry="160" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="6,6"/>
+          ` : ''}
+
+          <!-- STAGE 2: Primary Outer Silhouette Block-In -->
+          ${stage >= 2 ? `
+            <rect x="36" y="36" width="440" height="440" fill="none" stroke="${strokePrimary}" stroke-width="3.5" rx="12"/>
+            <path d="M 40 120 C 140 40, 370 40, 472 120 C 472 370, 370 472, 40 472 Z" fill="none" stroke="${strokePrimary}" stroke-width="3" stroke-dasharray="8,4"/>
+          ` : ''}
+
+          <!-- STAGE 3: Secondary Internal Seams & Feature Landmarks -->
+          ${stage >= 3 ? `
+            <line x1="60" y1="160" x2="452" y2="160" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,3"/>
+            <line x1="60" y1="320" x2="452" y2="320" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,3"/>
+            <path d="M 160 160 Q 256 220 352 160" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+            <path d="M 160 320 Q 256 370 352 320" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+          ` : ''}
+
+          <!-- STAGE 4: Form Shading & 45-Degree Pencil Cross-Hatching -->
+          ${stage >= 4 ? `
+            <g stroke="${strokePrimary}" stroke-width="1.5" opacity="0.7">
+              <line x1="60" y1="340" x2="120" y2="400"/><line x1="80" y1="340" x2="140" y2="400"/>
+              <line x1="100" y1="340" x2="160" y2="400"/><line x1="350" y1="340" x2="410" y2="400"/>
+              <line x1="370" y1="340" x2="430" y2="400"/><line x1="390" y1="340" x2="450" y2="400"/>
+            </g>
+          ` : ''}
+
+          <!-- STAGE 5: Line Weight Accents & Fine Details -->
+          ${stage >= 5 ? `
+            <rect x="32" y="32" width="448" height="448" fill="none" stroke="${strokeAccent}" stroke-width="4.5" rx="8"/>
+            <circle cx="256" cy="256" r="8" fill="${strokeAccent}"/>
+          ` : ''}
         `;
       } else if (targetMode === 'pixel') {
         // Crisp Pixel Art Vectors

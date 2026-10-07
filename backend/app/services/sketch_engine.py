@@ -15,74 +15,111 @@ class SketchEngine:
     @staticmethod
     def decompose_image_to_sketch_stack(input_image: Image.Image) -> tuple[LayerStack, list[dict]]:
         """
-        Decomposes an input reference image into 5 cumulative sketching stages.
+        Decomposes an input reference image into 5 progressive, beginner-friendly sketching stages.
+        Stage 1: Proportional Scaffolding (Grid & primary bounding shapes)
+        Stage 2: Outer Silhouette Block-In (Simplified outer contour)
+        Stage 3: Internal Seams & Feature Landmarks (Major internal division lines)
+        Stage 4: Value & Form Shading (45-degree directional cross-hatching)
+        Stage 5: Line Weight Accents & Fine Details (Sharp dark accents)
         """
         cv_img = cv2.cvtColor(np.array(input_image.convert("RGB")), cv2.COLOR_RGB2BGR)
         gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
         h, w = gray.shape
 
-        # White background canvas
-        bg = Image.new("RGBA", (w, h), (255, 255, 255, 255))
+        # Clean off-white paper canvas background
+        bg = Image.new("RGBA", (w, h), (250, 248, 245, 255))
         stack = LayerStack(background=bg)
 
-        # Stage 1: Gesture & Basic Scaffolding (Light cyan scaffolding lines)
+        # -------------------------------------------------------------------
+        # Stage 1: Proportional Scaffolding & Axis Lines
+        # -------------------------------------------------------------------
         layer1_arr = np.zeros((h, w, 4), dtype=np.uint8)
-        cv2.line(layer1_arr, (w // 2, 0), (w // 2, h), (180, 200, 230, 160), 1, cv2.LINE_AA)
-        cv2.line(layer1_arr, (0, h // 2), (w, h // 2), (180, 200, 230, 160), 1, cv2.LINE_AA)
-        cv2.rectangle(layer1_arr, (w // 6, h // 6), (5 * w // 6, 5 * h // 6), (180, 200, 230, 120), 1, cv2.LINE_AA)
         
-        blurred = cv2.GaussianBlur(gray, (9, 9), 0)
-        contours, _ = cv2.findContours(cv2.Canny(blurred, 30, 100), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        for c in contours:
-            if cv2.contourArea(c) > (w * h * 0.03):
-                ellipse = cv2.fitEllipse(c) if len(c) >= 5 else None
-                if ellipse:
-                    cv2.ellipse(layer1_arr, ellipse, (160, 190, 220, 160), 1, cv2.LINE_AA)
-        
-        layer1_pil = Image.fromarray(layer1_arr, mode="RGBA")
-        stack.push(layer1_pil)
+        # Rule of thirds & center crosshairs in light cyan
+        cyan_light = (200, 220, 240, 160)
+        cv2.line(layer1_arr, (w // 2, 0), (w // 2, h), cyan_light, 1, cv2.LINE_AA)
+        cv2.line(layer1_arr, (0, h // 2), (w, h // 2), cyan_light, 1, cv2.LINE_AA)
+        cv2.line(layer1_arr, (w // 3, 0), (w // 3, h), cyan_light, 1, cv2.LINE_AA)
+        cv2.line(layer1_arr, (2 * w // 3, 0), (2 * w // 3, h), cyan_light, 1, cv2.LINE_AA)
+        cv2.line(layer1_arr, (0, h // 3), (w, h // 3), cyan_light, 1, cv2.LINE_AA)
+        cv2.line(layer1_arr, (0, 2 * h // 3), (w, 2 * h // 3), cyan_light, 1, cv2.LINE_AA)
 
-        # Stage 2: Primary Silhouette / Block-In (Graphite contours)
+        # Primary outer bounding box & primary fitted mass ellipse ONLY
+        blurred_heavy = cv2.GaussianBlur(gray, (25, 25), 0)
+        _, thresh_outer = cv2.threshold(blurred_heavy, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        contours_ext, _ = cv2.findContours(thresh_outer, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        if contours_ext:
+            largest_c = max(contours_ext, key=cv2.contourArea)
+            if cv2.contourArea(largest_c) > (w * h * 0.02):
+                x, y, bw, bh = cv2.boundingRect(largest_c)
+                cv2.rectangle(layer1_arr, (x, y), (x + bw, y + bh), cyan_light, 1, cv2.LINE_AA)
+                if len(largest_c) >= 5:
+                    ellipse = cv2.fitEllipse(largest_c)
+                    cv2.ellipse(layer1_arr, ellipse, (170, 200, 235, 180), 2, cv2.LINE_AA)
+        
+        stack.push(Image.fromarray(layer1_arr, mode="RGBA"))
+
+        # -------------------------------------------------------------------
+        # Stage 2: Simplified Outer Silhouette Outline (Outer Block-In)
+        # -------------------------------------------------------------------
         layer2_arr = np.zeros((h, w, 4), dtype=np.uint8)
-        canny_contour = cv2.Canny(blurred, 50, 150)
-        contours, _ = cv2.findContours(canny_contour, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        for c in contours:
-            if cv2.contourArea(c) > (w * h * 0.005):
-                cv2.drawContours(layer2_arr, [c], -1, (60, 60, 70, 220), 1, cv2.LINE_AA)
+        canny_outer = cv2.Canny(blurred_heavy, 30, 90)
+        contours_outer, _ = cv2.findContours(canny_outer, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
-        layer2_pil = Image.fromarray(layer2_arr, mode="RGBA")
-        stack.push(layer2_pil)
+        for c in contours_outer:
+            if cv2.contourArea(c) > (w * h * 0.005) or cv2.arcLength(c, False) > (w * 0.2):
+                # Smooth the contour to remove small bumps for beginner outline tracing
+                epsilon = 0.008 * cv2.arcLength(c, True)
+                approx = cv2.approxPolyDP(c, epsilon, True)
+                cv2.drawContours(layer2_arr, [approx], -1, (50, 50, 65, 240), 2, cv2.LINE_AA)
+        
+        stack.push(Image.fromarray(layer2_arr, mode="RGBA"))
 
-        # Stage 3: Secondary Features & Plane Breaks
+        # -------------------------------------------------------------------
+        # Stage 3: Major Internal Seams & Feature Landmarks
+        # -------------------------------------------------------------------
         layer3_arr = np.zeros((h, w, 4), dtype=np.uint8)
-        detail_lines = cv2.Canny(gray, 80, 180)
-        y_indices, x_indices = np.where(detail_lines > 0)
-        layer3_arr[y_indices, x_indices] = [40, 40, 50, 230]
-        layer3_pil = Image.fromarray(layer3_arr, mode="RGBA")
-        stack.push(layer3_pil)
+        blurred_mid = cv2.GaussianBlur(gray, (9, 9), 0)
+        canny_internal = cv2.Canny(blurred_mid, 50, 130)
+        contours_mid, hierarchy = cv2.findContours(canny_internal, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        
+        for idx, c in enumerate(contours_mid):
+            arc_len = cv2.arcLength(c, False)
+            if arc_len > (w * 0.05):
+                # Draw internal structural division lines
+                cv2.drawContours(layer3_arr, [c], -1, (40, 40, 50, 220), 1, cv2.LINE_AA)
+        
+        stack.push(Image.fromarray(layer3_arr, mode="RGBA"))
 
-        # Stage 4: Value & Cross-Hatching
+        # -------------------------------------------------------------------
+        # Stage 4: Form Shading & 45-Degree Cross-Hatching
+        # -------------------------------------------------------------------
         layer4_arr = np.zeros((h, w, 4), dtype=np.uint8)
-        dark_regions = gray < 120
-        hatch_mask = np.zeros((h, w), dtype=np.uint8)
-        for y in range(0, h, 6):
-            for x in range(0, w, 6):
-                if dark_regions[y, x]:
-                    cv2.line(hatch_mask, (x, y), (min(x + 4, w - 1), min(y + 4, h - 1)), 255, 1)
-        hatch_y, hatch_x = np.where(hatch_mask > 0)
-        layer4_arr[hatch_y, hatch_x] = [30, 30, 40, 180]
-        layer4_pil = Image.fromarray(layer4_arr, mode="RGBA")
-        stack.push(layer4_pil)
+        dark_mask = gray < 110
+        hatch_spacing = 8
+        
+        for y in range(0, h, hatch_spacing):
+            for x in range(0, w, hatch_spacing):
+                if dark_mask[y, x]:
+                    x2 = min(x + 6, w - 1)
+                    y2 = min(y + 6, h - 1)
+                    cv2.line(layer4_arr, (x, y), (x2, y2), (30, 30, 45, 170), 1, cv2.LINE_AA)
+        
+        stack.push(Image.fromarray(layer4_arr, mode="RGBA"))
 
+        # -------------------------------------------------------------------
         # Stage 5: Line Weight Accents & Fine Details
+        # -------------------------------------------------------------------
         layer5_arr = np.zeros((h, w, 4), dtype=np.uint8)
-        thick_edges = cv2.Canny(gray, 120, 220)
+        detail_edges = cv2.Canny(gray, 90, 190)
         kernel = np.ones((2, 2), np.uint8)
-        thick_edges = cv2.dilate(thick_edges, kernel, iterations=1)
-        accent_y, accent_x = np.where(thick_edges > 0)
-        layer5_arr[accent_y, accent_x] = [15, 15, 20, 255]
-        layer5_pil = Image.fromarray(layer5_arr, mode="RGBA")
-        stack.push(layer5_pil)
+        accent_edges = cv2.dilate(detail_edges, kernel, iterations=1)
+        
+        y_acc, x_acc = np.where(accent_edges > 0)
+        layer5_arr[y_acc, x_acc] = [15, 15, 22, 255]
+        
+        stack.push(Image.fromarray(layer5_arr, mode="RGBA"))
 
         # Verify continuity mathematically
         report = verify_stack(stack)
